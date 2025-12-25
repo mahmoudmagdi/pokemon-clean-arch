@@ -1,7 +1,9 @@
 import 'server-only';
 
 import {UserRepo} from "@/libs/domain/repositories/UserRepo";
-import {PrismaClient, User} from "@prisma/client";
+import {PrismaClient} from "@prisma/client";
+import {User} from "@/libs/domain/entities/User";
+import {mapUserToDomain} from "@/libs/data/mappers/user";
 
 export class UserRepoImpl implements UserRepo {
 
@@ -9,14 +11,19 @@ export class UserRepoImpl implements UserRepo {
     }
 
     async create(email: string, passwordHash: string): Promise<User> {
-        return this.prismaClient.user.create({data: {email, passwordHash}});
+        const user = await this.prismaClient.user.create({data: {email, passwordHash}});
+        return mapUserToDomain(user);
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        return this.prismaClient.user.findUnique({where: {email}});
+        const user = await this.prismaClient.user.findUnique({where: {email}});
+        if (!user) return null;
+        return mapUserToDomain(user);
     }
 
     async findById(id: string): Promise<User | null> {
-        return this.prismaClient.user.findUnique({where: {id}});
+        const user = await this.prismaClient.user.findUnique({where: {id}});
+        if (!user) return null;
+        return mapUserToDomain(user);
     }
 }
