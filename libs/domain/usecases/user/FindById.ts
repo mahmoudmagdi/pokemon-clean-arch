@@ -1,5 +1,6 @@
 import {UserRepo} from "@/libs/domain/repositories/UserRepo";
-import {User} from "@prisma/client";
+import {User} from "@/libs/domain/entities/User";
+
 
 export class FindByIdUseCase {
     constructor(private userRepo: UserRepo) {
