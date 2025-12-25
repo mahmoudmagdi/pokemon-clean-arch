@@ -1,6 +1,6 @@
 import 'server-only';
 
-import {Pokemon} from "@/libs/domain/entities/Pokemon";
+import {PokemonApiPokemonDTO} from "@/libs/data/dto/pokemon";
 
 export interface PokemonRemoteService {
     fetchList(limit: number, offset: number): Promise<{
@@ -8,5 +8,5 @@ export interface PokemonRemoteService {
         nextOffset: number | null;
     }>;
 
-    fetchByName(name: string): Promise<Pokemon>;
+    fetchByName(name: string): Promise<PokemonApiPokemonDTO>;
 }

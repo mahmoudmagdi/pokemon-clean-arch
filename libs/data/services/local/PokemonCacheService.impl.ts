@@ -9,7 +9,7 @@ export class PokemonCacheServiceImpl implements PokemonCacheService {
         return prisma.pokemonCache.findUnique({where: {name}});
     }
 
-    async upsert(name: string, payload: unknown) {
+    async upsert(name: string, payload: object) {
         await prisma.pokemonCache.upsert({
             where: {name},
             create: {name, payload: payload as object},

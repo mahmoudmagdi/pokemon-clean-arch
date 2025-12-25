@@ -4,9 +4,9 @@ import {PokemonRepo} from "@/libs/domain/repositories/PokemonRepo";
 import {Pokemon} from "@/libs/domain/entities/Pokemon";
 import {PokemonRemoteService} from "@/libs/data/services/remote/PokemonRemoteService";
 import {PokemonCacheService} from "@/libs/data/services/local/PokemonCacheService";
-import {isCacheStale} from "@/libs/data/utils/cache";
-import {PokeApiPokemonSchema} from "@/libs/data/dto/pokemon";
+import {PokeApiPokemonSchema, PokemonApiPokemonDTO} from "@/libs/data/dto/pokemon";
 import {mapPokeApiPokemonToDomain} from "@/libs/data/mappers/pokemon";
+import {isCacheStale} from "@/libs/data/utils/cache";
 
 export class PokemonRepoImpl implements PokemonRepo {
     constructor(
@@ -43,8 +43,12 @@ export class PokemonRepoImpl implements PokemonRepo {
             }
         }
 
+        const dto = await this.remote.fetchByName(name);
+        const parsed = PokeApiPokemonSchema.parse(dto) as PokemonApiPokemonDTO;
+        await this.local.upsert(name, parsed);
+
         return {
-            pokemon: (await this.remote.fetchByName(name)),
+            pokemon: mapPokeApiPokemonToDomain(parsed),
             cached: false
         };
     }
