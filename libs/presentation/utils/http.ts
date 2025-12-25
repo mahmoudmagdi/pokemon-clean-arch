@@ -11,6 +11,7 @@ export class HttpError extends Error {
 
 export async function httpJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
     const res = await fetch(input, {
+        credentials: "include",
         ...init,
         headers: {
             "Accept": "application/json",
