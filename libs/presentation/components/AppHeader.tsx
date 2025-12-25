@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import {useSession} from "@/libs/presentation/state/SessionProvider";
+import {useRouter} from "next/navigation";
 
 export function AppHeader() {
+
+    const router = useRouter();
     const {status, isLoggedIn, user, logout} = useSession();
+
     return (
         <header className="flex items-center justify-between p-4 border-b">
             <Link href="/pokemon">Pokédex</Link>
@@ -17,7 +21,11 @@ export function AppHeader() {
                 ) : isLoggedIn ? (
                     <div className="flex items-center gap-3">
                         <span className="text-sm">{user.email}</span>
-                        <button className="text-sm underline" onClick={() => void logout()}>
+                        <button className="text-sm underline cursor-pointer" onClick={() => {
+                            void logout();
+                            router.replace("/login");
+                            router.refresh();
+                        }}>
                             Logout
                         </button>
                     </div>
