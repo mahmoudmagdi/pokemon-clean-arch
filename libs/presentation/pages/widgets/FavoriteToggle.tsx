@@ -21,7 +21,7 @@ export default function FavoriteToggle({pokemonName}: { pokemonName: string }) {
             }
 
             try {
-                const res = await httpJson<{ items: string[] }>("/api/favorites", {
+                const {res} = await httpJson<{ items: string[] }>(`/api/favorites`, {
                     method: "GET",
                     headers: {"Content-Type": "application/json"},
                 });
@@ -46,13 +46,13 @@ export default function FavoriteToggle({pokemonName}: { pokemonName: string }) {
         setLoading(true);
         try {
             if (isFav) {
-                const res = await httpJson<{ success: boolean }>(`/api/favorites/${encodeURIComponent(normalized)}`, {
+                const {res} = await httpJson<{ success: boolean }>(`/api/favorites/${encodeURIComponent(normalized)}`, {
                     method: "DELETE",
                     headers: {"Content-Type": "application/json"},
                 });
                 if (res.success) setIsFav(false);
             } else {
-                const res = await httpJson<{ success: boolean }>(`/api/favorites/${encodeURIComponent(normalized)}`, {
+                const {res} = await httpJson<{ success: boolean }>(`/api/favorites/${encodeURIComponent(normalized)}`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                 });
