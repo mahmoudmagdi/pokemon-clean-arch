@@ -8,6 +8,7 @@ export default function FavoriteToggle({pokemonName}: { pokemonName: string }) {
 
     const {isLoggedIn} = useSession();
     const normalized = useMemo(() => pokemonName.toLowerCase(), [pokemonName]);
+
     const [loading, setLoading] = useState(false);
     const [isFav, setIsFav] = useState<boolean | null>(null);
 
