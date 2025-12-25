@@ -1,4 +1,4 @@
-import {User} from "@prisma/client";
+import {User} from "@/libs/domain/entities/User";
 
 export interface UserRepo {
     create(email: string, passwordHash: string): Promise<User>;
