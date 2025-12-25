@@ -1,17 +1,9 @@
-export class HttpError extends Error {
-    constructor(
-        message: string,
-        public status: number,
-        public body?: unknown
-    ) {
-        super(message);
-        this.name = "HttpError";
-    }
-}
-
-export async function httpJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+export async function httpJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<{
+    res: T;
+    status: number;
+    ok: boolean;
+}> {
     const res = await fetch(input, {
-        credentials: "include",
         ...init,
         headers: {
             "Accept": "application/json",
@@ -19,7 +11,7 @@ export async function httpJson<T>(input: RequestInfo | URL, init?: RequestInit):
         }
     });
 
-    let body: unknown = undefined;
+    let body: unknown;
     const contentType = res.headers.get("content-type") ?? "";
     if (contentType.includes("application/json")) {
         body = await res.json();
@@ -27,9 +19,9 @@ export async function httpJson<T>(input: RequestInfo | URL, init?: RequestInit):
         body = await res.text();
     }
 
-    if (!res.ok) {
-        throw new HttpError(`HTTP ${res.status}`, res.status, body);
-    }
-
-    return body as T;
+    return {
+        res: body as T,
+        status: res.status,
+        ok: res.ok
+    };
 }
