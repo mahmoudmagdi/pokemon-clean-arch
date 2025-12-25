@@ -15,7 +15,10 @@ export async function generateToken(payload: { userId: string }): Promise<string
         .sign(secret);
 }
 
-export async function verifyToken(token: string): Promise<{ userId: string }> {
+export async function verifyToken(token: string | null): Promise<{ userId: string | null }> {
+    if (!token) {
+        return {userId: null}
+    }
     const secret = getSecret();
     const {payload} = await jwtVerify(token, secret);
     return payload as { userId: string };
