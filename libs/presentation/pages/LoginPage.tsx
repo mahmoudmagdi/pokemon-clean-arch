@@ -1,4 +1,4 @@
-import LoginForm from "@/libs/presentation/pages/views/LoginForm";
+import LoginForm from "@/libs/presentation/pages/forms/LoginForm";
 
 export default async function LoginPage() {
     return (

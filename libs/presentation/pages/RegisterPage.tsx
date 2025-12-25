@@ -1,4 +1,4 @@
-import RegisterForm from "@/libs/presentation/pages/views/RegisterForm";
+import RegisterForm from "@/libs/presentation/pages/forms/RegisterForm";
 
 export default async function RegisterPage() {
     return (
