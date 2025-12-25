@@ -2,9 +2,11 @@
 
 import {useEffect, useMemo, useState} from "react";
 import {httpJson} from "@/libs/presentation/utils/http";
+import {useSession} from "@/libs/presentation/state/SessionProvider";
 
-export default function FavoriteToggle({userToken, pokemonName}: { userToken: string | null, pokemonName: string }) {
+export default function FavoriteToggle({pokemonName}: { pokemonName: string }) {
 
+    const {isLoggedIn} = useSession();
     const normalized = useMemo(() => pokemonName.toLowerCase(), [pokemonName]);
     const [loading, setLoading] = useState(false);
     const [isFav, setIsFav] = useState<boolean | null>(null);
@@ -12,7 +14,7 @@ export default function FavoriteToggle({userToken, pokemonName}: { userToken: st
     useEffect(() => {
         let cancelled = false;
         (async () => {
-            if (!userToken) {
+            if (!isLoggedIn) {
                 setIsFav(false);
                 return;
             }
@@ -30,10 +32,10 @@ export default function FavoriteToggle({userToken, pokemonName}: { userToken: st
         return () => {
             cancelled = true;
         };
-    }, [normalized, userToken]);
+    }, [normalized, isLoggedIn]);
 
     async function toggle() {
-        if (!userToken) {
+        if (!isLoggedIn) {
             alert("Please login to manage favorites.");
             return;
         }
@@ -60,7 +62,7 @@ export default function FavoriteToggle({userToken, pokemonName}: { userToken: st
         }
     }
 
-    const label = (userToken) ? (isFav ? "Unfavorite" : "Favorite") : "Login to favorite";
+    const label = (isLoggedIn) ? (isFav ? "Unfavorite" : "Favorite") : "Login to favorite";
 
     return (
         <button

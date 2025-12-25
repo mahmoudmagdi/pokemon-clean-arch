@@ -1,17 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import RemoveFavoriteButton from "../widgets/RemoveFavoriteButton";
-import {requireUserToken} from "@/libs/data/utils/auth";
-import {verifyToken} from "@/libs/data/utils/token";
-import {getUseCases} from "@/libs/presentation/di/container";
+import {useEffect, useState} from "react";
+import {httpJson} from "@/libs/presentation/utils/http";
+import {useSession} from "@/libs/presentation/state/SessionProvider";
 
-export default async function FavoritesView() {
+export default function FavoritesView() {
 
-    const {getFavorites} = getUseCases();
+    const {isLoggedIn} = useSession();
 
-    const token = await requireUserToken();
-    const {userId} = await verifyToken(token);
+    const [items, setItems] = useState<string[]>([]);
 
-    if (!token || !userId) {
+    useEffect(() => {
+        async function getFavorites() {
+            const res = await httpJson<{ items: string[] }>(`/api/favorites`, {
+                method: "GET",
+                headers: {"Content-Type": "application/json"},
+            });
+            setItems(res.items);
+        }
+
+        if (isLoggedIn) {
+            void getFavorites();
+        }
+    }, [isLoggedIn]);
+
+    if (!isLoggedIn) {
         return (
             <div className="mt-6 rounded-lg border p-4 text-slate-700">
                 No favorites yet (or you are not logged in).
@@ -19,7 +34,6 @@ export default async function FavoritesView() {
         );
     }
 
-    const items = await getFavorites.execute(userId);
     if (items.length === 0) {
         return (
             <div className="mt-6 rounded-lg border p-4 text-slate-700">
@@ -36,7 +50,9 @@ export default async function FavoritesView() {
                           className="font-semibold capitalize hover:underline">
                         {name}
                     </Link>
-                    <RemoveFavoriteButton name={name}/>
+                    <RemoveFavoriteButton name={name} onSuccess={() => {
+                        setItems((prev) => prev.filter((item) => item !== name));
+                    }}/>
                 </div>
             ))}
         </div>

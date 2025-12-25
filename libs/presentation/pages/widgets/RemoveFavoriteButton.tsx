@@ -4,7 +4,7 @@ import {useMemo, useState} from "react";
 import {httpJson} from "@/libs/presentation/utils/http";
 import {useRouter} from "next/navigation";
 
-export default function RemoveFavoriteButton({name}: { name: string }) {
+export default function RemoveFavoriteButton({name, onSuccess}: { name: string, onSuccess?: () => void }) {
 
     const router = useRouter();
     const normalizedName = useMemo(() => name.toLowerCase(), [name]);
@@ -13,11 +13,15 @@ export default function RemoveFavoriteButton({name}: { name: string }) {
 
     async function remove() {
         setLoading(true);
-        await httpJson<{ success: boolean }>(`/api/favorites/${encodeURIComponent(normalizedName)}`, {
+        const rest = await httpJson<{ success: boolean }>(`/api/favorites/${encodeURIComponent(normalizedName)}`, {
             method: "DELETE"
         });
+
+        if (rest.success) {
+            router.refresh();
+            onSuccess?.();
+        }
         setLoading(false);
-        router.refresh();
     }
 
     return (

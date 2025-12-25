@@ -3,10 +3,12 @@
 import {FormEvent, useState} from "react";
 import {useRouter} from "next/navigation";
 import {httpJson} from "@/libs/presentation/utils/http";
+import {useSession} from "@/libs/presentation/state/SessionProvider";
 
 export default function LoginPage() {
 
     const router = useRouter();
+    const {syncAfterLogin} = useSession();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -21,10 +23,11 @@ export default function LoginPage() {
             const res = await httpJson<{ success: boolean }>("/api/auth/login", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({email, password})
+                body: JSON.stringify({email, password}),
             });
 
             if (res.success) {
+                await syncAfterLogin();
                 router.push("/favorites");
                 router.refresh();
             }
