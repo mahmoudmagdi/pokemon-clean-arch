@@ -1,47 +1,26 @@
-"use client";
+"use server";
 
 import Link from "next/link";
-import {useEffect, useState} from "react";
 import {Pokemon} from "@/libs/domain/entities/Pokemon";
 import {httpJson} from "@/libs/presentation/utils/http";
-import PokemonListSkeleton from "@/libs/presentation/skeletons/PokemonListSkeleton";
+import {headers} from "next/headers";
 
-export default function PokemonListView() {
+async function getPokemonList(limit: number, offset: number) {
+    const headersList = await headers();
+    const host = headersList.get("host");
+    const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+    const url = `${protocol}://${host}/api/pokemon/list?limit=${limit}&offset=${offset}`;
+    return httpJson<{ items: Pokemon[], nextOffset: number | null }>(url, {
+        method: 'GET'
+    });
+}
 
-    const [loading, setLoading] = useState(true);
-    const [items, setItems] = useState<Pokemon[]>([]);
+export default async function PokemonListView() {
+
     const limit = 50;
     const offset = 0;
-
-    useEffect(() => {
-        let mounted = true;
-        (async function getPokemonDetails() {
-            try {
-                if (!mounted) return;
-                const res = await httpJson<{
-                    items: Pokemon[],
-                    nextOffset: number | null
-                }>(`/api/pokemon/list?limit=${limit}&offset=${offset}`);
-                setItems(res.items);
-            } catch (err) {
-                if (!mounted) return;
-                console.error(err);
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        })();
-        return () => {
-            mounted = false;
-        };
-    }, [limit, offset]);
-
-    if (loading) {
-        return (
-            <main className="mx-auto max-w-4xl p-6">
-                <PokemonListSkeleton/>
-            </main>
-        )
-    }
+    const {res} = await getPokemonList(limit, offset);
+    const items = res.items;
 
     return (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">

@@ -1,30 +1,30 @@
-"use client";
+"use server";
 
 import Link from "next/link";
 import RemoveFavoriteButton from "../widgets/RemoveFavoriteButton";
-import {useEffect, useState} from "react";
 import {httpJson} from "@/libs/presentation/utils/http";
-import {useSession} from "@/libs/presentation/state/SessionProvider";
+import {headers} from "next/headers";
 
-export default function FavoritesView() {
+async function getFavorites() {
+    const headersList = await headers();
+    const host = headersList.get("host");
+    const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+    const url = `${protocol}://${host}/api/favorites`;
+    const {res, status} = await httpJson<{ items: string[] }>(url, {
+        method: "GET",
+        headers: {"Content-Type": "application/json", "Cookie": headersList.get("cookie") || ""},
+    });
 
-    const {isLoggedIn} = useSession();
+    if (status === 401) {
+        return {isLoggedIn: false, items: []};
+    }
 
-    const [items, setItems] = useState<string[]>([]);
+    return {items: res.items, isLoggedIn: true};
+}
 
-    useEffect(() => {
-        async function getFavorites() {
-            const res = await httpJson<{ items: string[] }>(`/api/favorites`, {
-                method: "GET",
-                headers: {"Content-Type": "application/json"},
-            });
-            setItems(res.items);
-        }
+export default async function FavoritesView() {
 
-        if (isLoggedIn) {
-            void getFavorites();
-        }
-    }, [isLoggedIn]);
+    const {items, isLoggedIn} = await getFavorites();
 
     if (!isLoggedIn) {
         return (
@@ -37,7 +37,7 @@ export default function FavoritesView() {
     if (items.length === 0) {
         return (
             <div className="mt-6 rounded-lg border p-4 text-slate-700">
-                No favorites yet (or you are not logged in).
+                You have no favorite Pokémon yet.
             </div>
         );
     }
@@ -50,9 +50,7 @@ export default function FavoritesView() {
                           className="font-semibold capitalize hover:underline">
                         {name}
                     </Link>
-                    <RemoveFavoriteButton name={name} onSuccess={() => {
-                        setItems((prev) => prev.filter((item) => item !== name));
-                    }}/>
+                    <RemoveFavoriteButton name={name}/>
                 </div>
             ))}
         </div>

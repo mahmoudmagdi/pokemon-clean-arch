@@ -1,57 +1,25 @@
-"use client";
+"use server";
 
 import Image from "next/image";
 import FavoriteToggle from "../widgets/FavoriteToggle";
 import {httpJson} from "@/libs/presentation/utils/http";
 import {Pokemon} from "@/libs/domain/entities/Pokemon";
-import {useEffect, useState} from "react";
-import PokemonDetailsSkeleton from "@/libs/presentation/skeletons/PokemonDetailsSkeleton";
+import {headers} from "next/headers";
 
-export default function PokemonDetailsView({name}: { name: string }) {
+async function getPokemonDetails(name: string) {
+    const headersList = await headers();
+    const host = headersList.get("host");
+    const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+    const url = `${protocol}://${host}/api/pokemon/${encodeURIComponent(name)}`;
+    return httpJson<{ pokemon: Pokemon, cached: boolean }>(url, {
+        method: 'GET',
+    });
+}
 
-    const [loading, setLoading] = useState(true);
-    const [pokemon, setPokemon] = useState<Pokemon | null>(null);
-    const [cached, setCached] = useState<boolean | null>(null);
+export default async function PokemonDetailsView({name}: { name: string }) {
 
-    useEffect(() => {
-        let mounted = true;
-        setLoading(true);
-
-        async function getPokemonDetails() {
-            try {
-                if (!mounted) return;
-                const res = await httpJson<{
-                    pokemon: Pokemon,
-                    cached: boolean
-                }>(`/api/pokemon/${encodeURIComponent(name)}`);
-                setPokemon(res.pokemon);
-                setCached(res.cached);
-            } catch (err) {
-                if (!mounted) return;
-                console.error(err);
-            } finally {
-                if (mounted) setLoading(false);
-            }
-        }
-
-        if (name) {
-            getPokemonDetails();
-        } else {
-            setLoading(false);
-        }
-
-        return () => {
-            mounted = false;
-        };
-    }, [name]);
-
-    if (loading || !pokemon || cached === null) {
-        return (
-            <main className="mx-auto max-w-4xl p-6">
-                <PokemonDetailsSkeleton/>
-            </main>
-        );
-    }
+    const {res} = await getPokemonDetails(name);
+    const {pokemon, cached} = res;
 
     return (
         <div className="mt-6 rounded-lg border p-4">
