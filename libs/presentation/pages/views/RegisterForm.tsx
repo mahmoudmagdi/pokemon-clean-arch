@@ -17,14 +17,14 @@ export default function RegisterForm() {
         setError(null);
         setLoading(true);
         try {
-            const res = await httpJson<{ success: boolean }>("/api/auth/register", {
+            const res = await httpJson<{ ok: boolean }>("/api/auth/register", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({email, password})
             });
 
             // login immediately after register (optional) - for demo we redirect to login
-            if (!res.success) {
+            if (!res.ok) {
                 setError("Registration failed");
                 return;
             }

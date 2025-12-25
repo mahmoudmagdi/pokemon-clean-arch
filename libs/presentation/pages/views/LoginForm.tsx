@@ -20,13 +20,13 @@ export default function LoginForm() {
         setError(null);
         setLoading(true);
         try {
-            const res = await httpJson<{ success: boolean }>("/api/auth/login", {
+            const res = await httpJson<{ ok: boolean }>("/api/auth/login", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({email, password}),
             });
 
-            if (res.success) {
+            if (res.ok) {
                 await syncAfterLogin();
                 router.push("/favorites");
                 router.refresh();
