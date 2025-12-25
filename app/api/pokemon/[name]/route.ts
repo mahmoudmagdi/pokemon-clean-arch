@@ -1,7 +1,7 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextResponse} from "next/server";
 import {getContainer} from "@/libs/data/di/container";
 
-export async function GET(req: NextRequest, ctx: { params: Promise<{ name: string }> }) {
+export async function GET(ctx: { params: Promise<{ name: string }> }) {
     const p = await ctx.params;
     const name = p.name.toLowerCase();
 
