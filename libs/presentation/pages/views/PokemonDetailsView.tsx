@@ -1,12 +1,58 @@
+"use client";
+
 import Image from "next/image";
 import FavoriteToggle from "../widgets/FavoriteToggle";
-import {getUseCases} from "@/libs/presentation/di/container";
+import {httpJson} from "@/libs/presentation/utils/http";
+import {Pokemon} from "@/libs/domain/entities/Pokemon";
+import {useEffect, useState} from "react";
+import PokemonDetailsSkeleton from "@/libs/presentation/skeletons/PokemonDetailsSkeleton";
 
-export default async function PokemonDetailsView({name}: { name: string }) {
-    const {getPokemonDetails} = getUseCases();
-    const result = await getPokemonDetails.execute(name);
-    const pokemon = result.pokemon;
-    const cached = result.cached;
+export default function PokemonDetailsView({name}: { name: string }) {
+
+    const [loading, setLoading] = useState(true);
+    const [pokemon, setPokemon] = useState<Pokemon | null>(null);
+    const [cached, setCached] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        setLoading(true);
+
+        async function getPokemonDetails() {
+            try {
+                if (!mounted) return;
+                const res = await httpJson<{
+                    pokemon: Pokemon,
+                    cached: boolean
+                }>(`/api/pokemon/${encodeURIComponent(name)}`);
+                setPokemon(res.pokemon);
+                setCached(res.cached);
+            } catch (err) {
+                if (!mounted) return;
+                console.error(err);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+
+        if (name) {
+            getPokemonDetails();
+        } else {
+            setLoading(false);
+        }
+
+        return () => {
+            mounted = false;
+        };
+    }, [name]);
+
+    if (loading || !pokemon || cached === null) {
+        return (
+            <main className="mx-auto max-w-4xl p-6">
+                <PokemonDetailsSkeleton/>
+            </main>
+        );
+    }
+
     return (
         <div className="mt-6 rounded-lg border p-4">
             <div className="flex items-start justify-between gap-4">
