@@ -1,8 +1,10 @@
 import Image from "next/image";
 import FavoriteToggle from "../widgets/FavoriteToggle";
 import {getContainer} from "@/libs/data/di/container";
+import {requireUserToken} from "@/libs/data/utils/auth";
 
 export default async function PokemonDetailsView({name}: { name: string }) {
+    const token = await requireUserToken();
     const {useCases} = getContainer();
     const result = await useCases.getPokemonDetails.execute(name);
     const pokemon = result.pokemon;
@@ -16,7 +18,7 @@ export default async function PokemonDetailsView({name}: { name: string }) {
                         Source: {cached ? "Local cache" : "Remote"}
                     </p>
                 </div>
-                <FavoriteToggle pokemonName={pokemon.name}/>
+                <FavoriteToggle userToken={token} pokemonName={pokemon.name}/>
             </div>
 
             <div className="mt-4">

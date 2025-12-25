@@ -5,6 +5,7 @@ import {getContainer} from "@/libs/data/di/container";
 import bcrypt from "bcryptjs";
 import {z} from "zod";
 import {generateToken} from "@/libs/data/utils/token";
+import {setAuthCookie} from "@/libs/data/utils/auth";
 
 const BodySchema = z.object({
     email: z.string().email(),
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
     }
 
     const token = await generateToken({userId: user.id});
+    await setAuthCookie(token);
 
-    return NextResponse.json({token});
+    return NextResponse.json({success: true});
 }

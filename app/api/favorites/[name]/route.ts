@@ -1,13 +1,10 @@
 import {NextResponse} from "next/server";
 import {getContainer} from "@/libs/data/di/container";
 import {verifyToken} from "@/libs/data/utils/token";
+import {requireUserToken} from "@/libs/data/utils/auth";
 
-async function getUserIdFromRequest(req: Request) {
-    const authHeader = req.headers.get('Authentication') ?? req.headers.get('Authorization');
-    if (!authHeader) return null;
-
-    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-    const token = bearerMatch ? bearerMatch[1] : authHeader;
+async function getUserIdFromRequest() {
+    const token = await requireUserToken();
     const {userId} = await verifyToken(token);
     return userId ?? null;
 }
@@ -20,7 +17,7 @@ async function handleFavorite(
     const p = await ctx.params;
     const pokemonName = p.name.toLowerCase();
 
-    const userId = await getUserIdFromRequest(req);
+    const userId = await getUserIdFromRequest();
     if (!userId) {
         return NextResponse.json({error: "Unauthorized"}, {status: 401});
     }

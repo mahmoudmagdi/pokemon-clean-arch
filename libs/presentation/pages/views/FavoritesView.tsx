@@ -5,8 +5,13 @@ import {requireUserToken} from "@/libs/data/utils/auth";
 import {verifyToken} from "@/libs/data/utils/token";
 
 export default async function FavoritesView() {
+
+    const {useCases} = getContainer();
+
     const token = await requireUserToken();
-    if (!token) {
+    const {userId} = await verifyToken(token);
+
+    if (!token || !userId) {
         return (
             <div className="mt-6 rounded-lg border p-4 text-slate-700">
                 No favorites yet (or you are not logged in).
@@ -14,8 +19,6 @@ export default async function FavoritesView() {
         );
     }
 
-    const {useCases} = getContainer();
-    const {userId} = await verifyToken(token);
     const items = await useCases.getFavorites.execute(userId);
     if (items.length === 0) {
         return (

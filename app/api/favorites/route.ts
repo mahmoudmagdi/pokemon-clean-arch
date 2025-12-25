@@ -1,13 +1,10 @@
 import {NextResponse} from "next/server";
 import {verifyToken} from "@/libs/data/utils/token";
 import {getContainer} from "@/libs/data/di/container";
+import {requireUserToken} from "@/libs/data/utils/auth";
 
 export async function GET(req: Request) {
-    const authHeader = req.headers.get('Authentication') ?? req.headers.get('Authorization');
-    if (!authHeader) return null;
-
-    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-    const token = bearerMatch ? bearerMatch[1] : authHeader;
+    const token = await requireUserToken();
     const {userId} = await verifyToken(token);
     if (!userId) {
         return NextResponse.json({error: "Unauthorized"}, {status: 401});
