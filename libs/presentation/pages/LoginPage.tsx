@@ -3,7 +3,6 @@
 import {FormEvent, useState} from "react";
 import {useRouter} from "next/navigation";
 import {httpJson} from "@/libs/presentation/utils/http";
-import {setAuthCookie} from "@/libs/data/utils/auth";
 
 export default function LoginPage() {
 
@@ -19,16 +18,16 @@ export default function LoginPage() {
         setError(null);
         setLoading(true);
         try {
-            const res = await httpJson<{ token: string }>("/api/auth/login", {
+            const res = await httpJson<{ success: boolean }>("/api/auth/login", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({email, password})
             });
 
-            await setAuthCookie(res.token);
-
-            router.push("/favorites");
-            router.refresh();
+            if (res.success) {
+                router.push("/favorites");
+                router.refresh();
+            }
         } catch (err: unknown) {
             console.log(err);
             setError("Login failed");
