@@ -23,7 +23,7 @@ type SessionContextValue = SessionState & {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 async function fetchSession(): Promise<{ isLoggedIn: boolean; user: SessionUser | null }> {
-    const res = await httpJson<{ isLoggedIn: boolean, user: SessionUser }>(`/api/auth/session`, {
+    const {res} = await httpJson<{ isLoggedIn: boolean, user: SessionUser }>(`/api/auth/session`, {
         method: "GET",
         credentials: "include",
         cache: "no-store",
