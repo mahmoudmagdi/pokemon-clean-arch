@@ -1,12 +1,12 @@
 import Link from "next/link";
 import RemoveFavoriteButton from "../widgets/RemoveFavoriteButton";
-import {getContainer} from "@/libs/data/di/container";
 import {requireUserToken} from "@/libs/data/utils/auth";
 import {verifyToken} from "@/libs/data/utils/token";
+import {getUseCases} from "@/libs/presentation/di/container";
 
 export default async function FavoritesView() {
 
-    const {useCases} = getContainer();
+    const {getFavorites} = getUseCases();
 
     const token = await requireUserToken();
     const {userId} = await verifyToken(token);
@@ -19,7 +19,7 @@ export default async function FavoritesView() {
         );
     }
 
-    const items = await useCases.getFavorites.execute(userId);
+    const items = await getFavorites.execute(userId);
     if (items.length === 0) {
         return (
             <div className="mt-6 rounded-lg border p-4 text-slate-700">

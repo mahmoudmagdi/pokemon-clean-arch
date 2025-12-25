@@ -1,9 +1,9 @@
 import Link from "next/link";
-import {getContainer} from "@/libs/data/di/container";
+import {getUseCases} from "@/libs/presentation/di/container";
 
 export default async function PokemonListView() {
-    const {useCases} = getContainer();
-    const data = await useCases.listPokemon.execute(30, 0);
+    const {listPokemon} = getUseCases();
+    const data = await listPokemon.execute(30, 0);
     return (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {

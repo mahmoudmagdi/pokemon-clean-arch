@@ -1,12 +1,12 @@
 import Image from "next/image";
 import FavoriteToggle from "../widgets/FavoriteToggle";
-import {getContainer} from "@/libs/data/di/container";
 import {requireUserToken} from "@/libs/data/utils/auth";
+import {getUseCases} from "@/libs/presentation/di/container";
 
 export default async function PokemonDetailsView({name}: { name: string }) {
     const token = await requireUserToken();
-    const {useCases} = getContainer();
-    const result = await useCases.getPokemonDetails.execute(name);
+    const {getPokemonDetails} = getUseCases();
+    const result = await getPokemonDetails.execute(name);
     const pokemon = result.pokemon;
     const cached = result.cached;
     return (
