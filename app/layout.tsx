@@ -3,6 +3,7 @@ import type {Metadata} from "next";
 import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import {AppHeader} from "@/libs/presentation/components/AppHeader";
+import {SessionProvider} from "@/libs/presentation/state/SessionProvider";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -22,10 +23,11 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: Readonly<{ children: ReactNode }>) {
     return (
         <html lang="en">
-        <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AppHeader/>
-        {children}
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <SessionProvider>
+            <AppHeader/>
+            {children}
+        </SessionProvider>
         </body>
         </html>
     );
