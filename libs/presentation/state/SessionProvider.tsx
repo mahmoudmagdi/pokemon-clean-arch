@@ -1,6 +1,7 @@
 "use client";
 
 import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from "react";
+import {httpJson} from "@/libs/presentation/utils/http";
 
 export type SessionUser = {
     id: string;
@@ -22,14 +23,14 @@ type SessionContextValue = SessionState & {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 async function fetchSession(): Promise<{ isLoggedIn: boolean; user: SessionUser | null }> {
-    const res = await fetch("/api/auth/session", {
+    const res = await httpJson<{ isLoggedIn: boolean, user: SessionUser }>(`/api/auth/session`, {
         method: "GET",
         credentials: "include",
         cache: "no-store",
     });
 
-    if (!res.ok) return {isLoggedIn: false, user: null};
-    return res.json();
+    if (!res) return {isLoggedIn: false, user: null};
+    return res;
 }
 
 export function SessionProvider({children}: { children: React.ReactNode }) {
@@ -53,7 +54,7 @@ export function SessionProvider({children}: { children: React.ReactNode }) {
     }, []);
 
     const logout = useCallback(async () => {
-        await fetch("/api/auth/logout", {
+        await httpJson<{ ok: boolean }>("/api/auth/logout", {
             method: "POST",
             credentials: "include",
         });
@@ -68,7 +69,11 @@ export function SessionProvider({children}: { children: React.ReactNode }) {
 
     useEffect(() => {
         // On first mount, just fetch once; initial state already "loading"
-        void refresh({silent: true});
+        async function refreshTrigger() {
+            await refresh({silent: true});
+        }
+
+        refreshTrigger();
     }, [refresh]);
 
     const value = useMemo<SessionContextValue>(
