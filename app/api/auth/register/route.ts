@@ -30,5 +30,5 @@ export async function POST(req: Request) {
         return NextResponse.json({error: "Could not create user"}, {status: 500});
     }
 
-    return NextResponse.json({success: true});
+    return NextResponse.json({ok: true});
 }
