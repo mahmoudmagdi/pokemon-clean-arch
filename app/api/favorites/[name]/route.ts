@@ -14,8 +14,8 @@ async function handleFavorite(
     ctx: { params: Promise<{ name: string }> },
     executor: (userId: string, pokemonName: string) => Promise<boolean>
 ) {
-    const p = await ctx.params;
-    const pokemonName = p.name.toLowerCase();
+    const {name} = await ctx.params;
+    const pokemonName = name.toLowerCase();
 
     const userId = await getUserIdFromRequest();
     if (!userId) {
