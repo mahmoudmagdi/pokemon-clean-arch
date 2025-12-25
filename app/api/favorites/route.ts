@@ -3,7 +3,7 @@ import {verifyToken} from "@/libs/data/utils/token";
 import {getContainer} from "@/libs/data/di/container";
 import {requireUserToken} from "@/libs/data/utils/auth";
 
-export async function GET(req: Request) {
+export async function GET() {
     const token = await requireUserToken();
     const {userId} = await verifyToken(token);
     if (!userId) {
