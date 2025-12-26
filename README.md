@@ -1,13 +1,13 @@
-````md
 <div align="center">
 
-<!-- TODO: Add a Poké Ball icon here -->
-<!-- Example: <img src="./docs/pokeball.png" alt="Poké Ball" width="96" /> -->
+<img src="./docs/pokeball.png" alt="Poké Ball" width="100" />
 
 # Pokémon Clean Architecture (Next.js App Router)
 
-A production-style **Clean Architecture** demo built with **Next.js App Router**, using **PokeAPI** (remote) + **PostgreSQL/Prisma** (local) for **Favorites** and a **7-day Pokémon details cache**.  
-Includes **email/password auth** with an **httpOnly cookie session**, **Suspense + skeleton UI**, **TypeScript strict**, and **Zod** validation.
+A production-style **Clean Architecture** demo built with **Next.js App Router**, using **PokeAPI** (remote) + *
+*PostgreSQL/Prisma** (local) for **Favorites** and a **7-day Pokémon details cache**.  
+Includes **email/password auth** with an **httpOnly cookie session**, **Suspense + skeleton UI**, **TypeScript strict**,
+and **Zod** validation.
 
 <br/>
 
@@ -19,6 +19,12 @@ Includes **email/password auth** with an **httpOnly cookie session**, **Suspense
 ![License](https://img.shields.io/github/license/mahmoudmagdi/pokemon-clean-arch)
 ![Repo Stars](https://img.shields.io/github/stars/mahmoudmagdi/pokemon-clean-arch?style=social)
 
+<br/>
+
+📖 **Medium article:**  
+Clean Architecture for Frontend with Next.js App Router — A Practical Pokédex Case Study  
+[Medium URL](https://khlafawi.medium.com/clean-architecture-for-frontend-with-next-js-app-router-a-practical-pok%C3%A9dex-case-study-45c1eb8e08d4)
+
 </div>
 
 ---
@@ -28,6 +34,7 @@ Includes **email/password auth** with an **httpOnly cookie session**, **Suspense
 ✅ Clean Architecture applied to a modern **frontend-fullstack** Next.js app  
 ✅ Stable API contracts via **`/app/api/*`** (BFF proxy style)  
 ✅ Two data sources:
+
 - 🌐 **Remote**: PokeAPI (no keys)
 - 🗄️ **Local**: PostgreSQL (Favorites + cached Pokémon details)
 
@@ -44,6 +51,7 @@ Includes **email/password auth** with an **httpOnly cookie session**, **Suspense
 This repo uses three layers:
 
 ### 1) Domain (core rules)
+
 - Entities (e.g., `Pokemon`, `User`)
 - Use-cases (business actions)
 - Repository interfaces (contracts)
@@ -51,6 +59,7 @@ This repo uses three layers:
 **No Next.js, no Prisma, no implementation details.**
 
 ### 2) Data (implementations)
+
 - Prisma repositories (DB)
 - Remote services (PokeAPI)
 - Local services (Favorites + Cache)
@@ -59,6 +68,7 @@ This repo uses three layers:
 - DI container (composition root)
 
 ### 3) Presentation (UI)
+
 - Pages / views / widgets
 - Skeletons + Suspense boundaries
 - SessionProvider (client auth state)
@@ -90,38 +100,12 @@ prisma/
 
 ### Fetch Pokémon details (with DB cache)
 
-```mermaid
-flowchart LR
-  UI[PokemonDetailsView] --> API[/api/pokemon/:name/]
-  API --> UC[GetPokemonDetails UseCase]
-  UC --> Repo[PokemonRepo]
-  Repo --> C{Cache hit & fresh?}
-  C -- yes --> DB[(PokemonCache)]
-  C -- no --> Remote[PokeAPI]
-  Remote --> DB
-  DB --> UI
-```
+<img src="./docs/fetch-pokemon-details.png" alt="Poké Ball" width="1080" />
 
 ### Favorites (cookie-authenticated)
 
-```mermaid
-sequenceDiagram
-  participant UI as UI (FavoritesView / Widgets)
-  participant API as /api/favorites
-  participant Auth as Cookie + JWT
-  participant DB as Postgres (Prisma)
+<img src="./docs/favorites.png" alt="Poké Ball" width="1080" />
 
-  UI->>API: GET /api/favorites (cookies included)
-  API->>Auth: read cookie + verify token
-  API->>DB: load favorites by userId
-  API-->>UI: {items: [...]}
-
-  UI->>API: DELETE /api/favorites/:name
-  API->>Auth: verify cookie token
-  API->>DB: delete favorite
-  API-->>UI: {ok:true}
-  UI->>UI: router.refresh()
-```
 
 ---
 
@@ -154,14 +138,14 @@ We validate external input at boundaries:
 Example pattern:
 
 ```ts
-import { z } from "zod";
+import {z} from "zod";
 
 export const PokemonDetailsDtoSchema = z.object({
-  name: z.string(),
-  id: z.number(),
-  sprites: z.object({
-    front_default: z.string().nullable(),
-  }),
+    name: z.string(),
+    id: z.number(),
+    sprites: z.object({
+        front_default: z.string().nullable(),
+    }),
 });
 
 export type PokemonDetailsDto = z.infer<typeof PokemonDetailsDtoSchema>;
@@ -277,19 +261,21 @@ Example (simplified):
 ```ts
 // libs/domain/repositories/PokemonRepo.ts
 export interface PokemonRepo {
-  list(limit: number, offset: number): Promise<{ items: { name: string }[]; nextOffset: number | null }>;
-  getByName(name: string): Promise<{ pokemon: Pokemon; cached: boolean }>;
+    list(limit: number, offset: number): Promise<{ items: { name: string }[]; nextOffset: number | null }>;
+
+    getByName(name: string): Promise<{ pokemon: Pokemon; cached: boolean }>;
 }
 ```
 
 ```ts
 // libs/domain/usecases/pokemon/GetPokemonDetails.ts
 export class GetPokemonDetails {
-  constructor(private readonly repo: PokemonRepo) {}
+    constructor(private readonly repo: PokemonRepo) {
+    }
 
-  execute(name: string) {
-    return this.repo.getByName(name);
-  }
+    execute(name: string) {
+        return this.repo.getByName(name);
+    }
 }
 ```
 
@@ -300,13 +286,13 @@ export class GetPokemonDetails {
 let _container: { useCases: any } | null = null;
 
 export function getContainer() {
-  if (_container) return _container;
+    if (_container) return _container;
 
-  // Instantiate Prisma client, services, repos
-  // Wire use-cases with repo interfaces
-  _container = { useCases: {/* ... */} };
+    // Instantiate Prisma client, services, repos
+    // Wire use-cases with repo interfaces
+    _container = {useCases: {/* ... */}};
 
-  return _container;
+    return _container;
 }
 ```
 
@@ -316,18 +302,6 @@ export function getContainer() {
 // libs/presentation/state/SessionProvider.tsx
 // loads /api/auth/session and exposes isLoggedIn/user
 ```
-
----
-
-## ✅ Publishing checklist (recommended)
-
-* [ ] Ensure `.env` is not committed (only `.env.example`)
-* [ ] Remove `.DS_Store` and `__MACOSX/` (macOS artifacts)
-* [ ] Add a real Poké Ball icon in `/docs` and link it above
-* [ ] Add 1–2 unit tests:
-
-    * cache staleness (7-day TTL)
-    * one use-case with mocked repo
 
 ---
 
@@ -351,11 +325,3 @@ PRs and suggestions are welcome:
 * additional tests
 * UI polish (shadcn/ui)
 * more use-cases / features (teams, categories, etc.)
-
----
-
-<div align="center">
-  <sub>Made with Clean Architecture principles and Next.js App Router.</sub>
-</div>
-```
-::contentReference[oaicite:0]{index=0}
