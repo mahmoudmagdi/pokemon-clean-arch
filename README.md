@@ -1,36 +1,361 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+````md
+<div align="center">
 
-## Getting Started
+<!-- TODO: Add a Poké Ball icon here -->
+<!-- Example: <img src="./docs/pokeball.png" alt="Poké Ball" width="96" /> -->
 
-First, run the development server:
+# Pokémon Clean Architecture (Next.js App Router)
+
+A production-style **Clean Architecture** demo built with **Next.js App Router**, using **PokeAPI** (remote) + **PostgreSQL/Prisma** (local) for **Favorites** and a **7-day Pokémon details cache**.  
+Includes **email/password auth** with an **httpOnly cookie session**, **Suspense + skeleton UI**, **TypeScript strict**, and **Zod** validation.
+
+<br/>
+
+![Next.js](https://img.shields.io/badge/Next.js-App%20Router-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-DB-316192?logo=postgresql)
+![Zod](https://img.shields.io/badge/Zod-Validation-3068b7)
+![License](https://img.shields.io/github/license/mahmoudmagdi/pokemon-clean-arch)
+![Repo Stars](https://img.shields.io/github/stars/mahmoudmagdi/pokemon-clean-arch?style=social)
+
+</div>
+
+---
+
+## ✨ What this project demonstrates
+
+✅ Clean Architecture applied to a modern **frontend-fullstack** Next.js app  
+✅ Stable API contracts via **`/app/api/*`** (BFF proxy style)  
+✅ Two data sources:
+- 🌐 **Remote**: PokeAPI (no keys)
+- 🗄️ **Local**: PostgreSQL (Favorites + cached Pokémon details)
+
+✅ Cache policy: **refresh Pokémon details if older than 7 days**  
+✅ Auth: **email/password** + **httpOnly cookie** session  
+✅ UI: **Suspense + skeletons** for fast perceived performance  
+✅ Type safety: **TypeScript strict** + **Zod**  
+✅ No Server Actions: **all mutations are Route Handlers** (`/app/api/*`)
+
+---
+
+## 🧠 Architecture Overview
+
+This repo uses three layers:
+
+### 1) Domain (core rules)
+- Entities (e.g., `Pokemon`, `User`)
+- Use-cases (business actions)
+- Repository interfaces (contracts)
+
+**No Next.js, no Prisma, no implementation details.**
+
+### 2) Data (implementations)
+- Prisma repositories (DB)
+- Remote services (PokeAPI)
+- Local services (Favorites + Cache)
+- DTOs + mappers
+- Cache policy enforcement
+- DI container (composition root)
+
+### 3) Presentation (UI)
+- Pages / views / widgets
+- Skeletons + Suspense boundaries
+- SessionProvider (client auth state)
+- HTTP helpers
+
+---
+
+## 🗂️ Project Structure
+
+```txt
+app/
+  (public)/                 # Public routes (login/register/pokemon pages)
+  (app)/                    # Auth-required routes (favorites, etc.)
+  api/                      # Stable API contracts (BFF proxy)
+    auth/                   # login/register/session/logout
+    pokemon/                # list + details proxy endpoints
+    favorites/              # favorites endpoints (cookie auth)
+libs/
+  domain/                   # Entities, repo interfaces, use-cases (pure TS)
+  data/                     # Prisma, services, repo impls, mappers, DI
+  presentation/             # Views, widgets, skeletons, session provider
+prisma/
+  schema.prisma             # Postgres schema (User, Favorite, PokemonCache)
+````
+
+---
+
+## 🔁 Data Flow (end-to-end)
+
+### Fetch Pokémon details (with DB cache)
+
+```mermaid
+flowchart LR
+  UI[PokemonDetailsView] --> API[/api/pokemon/:name/]
+  API --> UC[GetPokemonDetails UseCase]
+  UC --> Repo[PokemonRepo]
+  Repo --> C{Cache hit & fresh?}
+  C -- yes --> DB[(PokemonCache)]
+  C -- no --> Remote[PokeAPI]
+  Remote --> DB
+  DB --> UI
+```
+
+### Favorites (cookie-authenticated)
+
+```mermaid
+sequenceDiagram
+  participant UI as UI (FavoritesView / Widgets)
+  participant API as /api/favorites
+  participant Auth as Cookie + JWT
+  participant DB as Postgres (Prisma)
+
+  UI->>API: GET /api/favorites (cookies included)
+  API->>Auth: read cookie + verify token
+  API->>DB: load favorites by userId
+  API-->>UI: {items: [...]}
+
+  UI->>API: DELETE /api/favorites/:name
+  API->>Auth: verify cookie token
+  API->>DB: delete favorite
+  API-->>UI: {ok:true}
+  UI->>UI: router.refresh()
+```
+
+---
+
+## 🔐 Authentication model
+
+* `POST /api/auth/login` sets an **httpOnly cookie** (e.g., `pokedex_token`)
+* `GET /api/auth/session` returns `{ isLoggedIn, user }`
+* A client `SessionProvider` keeps UI state in sync:
+
+    * `refresh()` → re-checks session
+    * `syncAfterLogin()` → call after login/register
+    * `logout()` → clears cookie and updates state
+
+Why httpOnly cookies?
+
+* Client JS never reads your JWT
+* Safer by default
+* Works naturally for server rendering + API routes
+
+---
+
+## 🧪 Type safety and validation (Zod)
+
+We validate external input at boundaries:
+
+* PokeAPI responses → parsed/validated DTO → mapped to domain entity
+* Auth requests (login/register) → validated body before use-cases
+* DB payloads (if JSON stored) → validated before mapping
+
+Example pattern:
+
+```ts
+import { z } from "zod";
+
+export const PokemonDetailsDtoSchema = z.object({
+  name: z.string(),
+  id: z.number(),
+  sprites: z.object({
+    front_default: z.string().nullable(),
+  }),
+});
+
+export type PokemonDetailsDto = z.infer<typeof PokemonDetailsDtoSchema>;
+```
+
+---
+
+## 🚀 Running the project locally
+
+### 1) Requirements
+
+* Node.js 18+ (recommended 20+)
+* Docker (recommended for Postgres) or a local Postgres installation
+
+### 2) Clone
+
+```bash
+git clone https://github.com/mahmoudmagdi/pokemon-clean-arch.git
+cd pokemon-clean-arch
+```
+
+### 3) Install dependencies
+
+```bash
+npm install
+```
+
+### 4) Create `.env`
+
+Copy the example env file:
+
+```bash
+cp .env.example .env
+```
+
+Set values in `.env`:
+
+* `DATABASE_URL=...`
+* `AUTH_SECRET=...` (any long random string)
+
+Example `AUTH_SECRET` generation:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### 5) Start PostgreSQL (Docker)
+
+```bash
+docker run -d \
+  --name pokedex-postgres \
+  -p 5432:5432 \
+  -e POSTGRES_DB=pokedex_db \
+  -e POSTGRES_USER=pokedex_user \
+  -e POSTGRES_PASSWORD=pokedex_password \
+  -v pokedex_pg_data:/var/lib/postgresql/data \
+  postgres:16
+```
+
+Then set `DATABASE_URL` accordingly:
+
+```env
+DATABASE_URL="postgresql://pokedex_user:pokedex_password@localhost:5432/pokedex_db?schema=public"
+```
+
+### 6) Run Prisma migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 7) Start Next.js
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧩 Key routes
 
-To learn more about Next.js, take a look at the following resources:
+### Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* `/pokemon` → list
+* `/pokemon/[name]` → details
+* `/favorites` → favorites (requires login)
+* `/login`, `/register`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### API (stable contracts)
 
-## Deploy on Vercel
+* `GET /api/pokemon/list?limit=30&offset=0`
+* `GET /api/pokemon/[name]`
+* `GET /api/favorites`
+* `POST /api/favorites` (add)
+* `DELETE /api/favorites/[name]`
+* `POST /api/auth/login`
+* `POST /api/auth/register`
+* `GET /api/auth/session`
+* `POST /api/auth/logout`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧱 How Clean Architecture is enforced in code
+
+### Domain: only interfaces + use-cases
+
+Example (simplified):
+
+```ts
+// libs/domain/repositories/PokemonRepo.ts
+export interface PokemonRepo {
+  list(limit: number, offset: number): Promise<{ items: { name: string }[]; nextOffset: number | null }>;
+  getByName(name: string): Promise<{ pokemon: Pokemon; cached: boolean }>;
+}
+```
+
+```ts
+// libs/domain/usecases/pokemon/GetPokemonDetails.ts
+export class GetPokemonDetails {
+  constructor(private readonly repo: PokemonRepo) {}
+
+  execute(name: string) {
+    return this.repo.getByName(name);
+  }
+}
+```
+
+### Data: implementations + DI container
+
+```ts
+// libs/data/di/container.ts
+let _container: { useCases: any } | null = null;
+
+export function getContainer() {
+  if (_container) return _container;
+
+  // Instantiate Prisma client, services, repos
+  // Wire use-cases with repo interfaces
+  _container = { useCases: {/* ... */} };
+
+  return _container;
+}
+```
+
+### Presentation: UI calls stable APIs + uses session provider
+
+```ts
+// libs/presentation/state/SessionProvider.tsx
+// loads /api/auth/session and exposes isLoggedIn/user
+```
+
+---
+
+## ✅ Publishing checklist (recommended)
+
+* [ ] Ensure `.env` is not committed (only `.env.example`)
+* [ ] Remove `.DS_Store` and `__MACOSX/` (macOS artifacts)
+* [ ] Add a real Poké Ball icon in `/docs` and link it above
+* [ ] Add 1–2 unit tests:
+
+    * cache staleness (7-day TTL)
+    * one use-case with mocked repo
+
+---
+
+## 📄 License
+
+This project is licensed under the terms in the `LICENSE` file.
+
+---
+
+## 🙌 Credits
+
+* Pokémon data powered by **PokeAPI**: [https://pokeapi.co/](https://pokeapi.co/)
+
+---
+
+## 🤝 Contributing
+
+PRs and suggestions are welcome:
+
+* improvements to the architecture explanation
+* additional tests
+* UI polish (shadcn/ui)
+* more use-cases / features (teams, categories, etc.)
+
+---
+
+<div align="center">
+  <sub>Made with Clean Architecture principles and Next.js App Router.</sub>
+</div>
+```
+::contentReference[oaicite:0]{index=0}
